@@ -201,29 +201,31 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         f"Привет, {name}! Я твой <b>Love Bank</b> 💘\n\n"
         "Правила простые:\n"
-        "• Шли фото с купюрами 100€ (игрушечными). Я посчитаю и пополню твой баланс.\n"
+        "• Присылай фото с купюрами 100€. Я посчитаю и пополню твой баланс.\n"
         "• Открой /love_menu и меняй их на радости.\n\n"
-        "<i>Даже если деньги фальшивые, наша любовь настоящая 🧡.</i>"
+        "<i>P.S. Даже если деньги фальшивые, наша любовь настоящая 🧡.</i>"
     )
     await update.message.reply_text(text, parse_mode="HTML")
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
+        "Правила простые:\n"
+        "• Присылай фото с купюрами 100€. Я посчитаю и пополню твой баланс.\n"
+        "• Открой /love_menu и меняй их на радости.\n\n"
         "Советы:\n"
         "• Клади купюры на светлый фон, не перекрывай.\n"
         "• Лучше одним слоем.\n"
         "• Можно снимать сразу пачку.\n\n"
-        "Просто шли фото — я начислю по 100€ за каждую."
     )
 
 async def balance_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bal = get_balance(update.effective_user.id)
-    await update.message.reply_text(f"Твой баланс: {bal}€")
+    await update.message.reply_text(f"Твой баланс: {bal}€\nИ помни, ты всегда прав, потому что ты лев :)")
 
 async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bal = get_balance(update.effective_user.id)
     await update.message.reply_text(
-        f"Обменный курс. Твой баланс: {bal}€\nВыбирай приз:",
+        f"Обменный курс. Твой баланс: {bal}€\nВыбирай приз, красавчик:",
         reply_markup=menu_keyboard(bal)
     )
 
@@ -323,7 +325,7 @@ async def album_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if total_count <= 0:
                 await context.bot.send_message(
                     chat_id,
-                    "В альбоме нет новых фото для пополнения 🤷‍♀️"
+                    "Ага! Попался! В альбоме нет новых фото для пополнения 🤷‍♀️"
                 )
                 return
 
@@ -382,7 +384,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.edit_message_text("Позиция не найдена.")
             return
         if bal < cost:
-            await q.edit_message_text("Недостаточно средств.")
+            await q.edit_message_text("Недостаточно средств. Копи еще 😉")
             return
 
         # NEW: подтверждение обмена
@@ -420,7 +422,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         if bal < p_cost:
             pending_del(token)
-            await q.edit_message_text("Недостаточно средств.")
+            await q.edit_message_text("Недостаточно средств. Копи еще 😉")
             return
 
         new_bal = add_balance(user.id, -p_cost)
@@ -428,7 +430,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         extra = ""
         if p_code == "cashout100":
-            extra = "\n🧾 Перевод принят. Жди подтверждения."
+            extra = "\n🧾 Жди подтверждения."
         if p_code == "jackpot":
             extra = "\n💃 Суперприз активирован! (Жди сообщение - сюрприз 😉)"
 
