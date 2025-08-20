@@ -23,7 +23,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OWNER_CHAT_ID  = os.getenv("OWNER_CHAT_ID")   # опционально: твой chat id для уведомлений
 DENOM_VALUE    = 100     # номинал одной игрушечной купюры
 JACKPOT        = 5000    # порог суперприза
-DB_PATH        = "love_bank.db"
+DB_PATH = os.getenv("DB_PATH", "love_bank.db")
+
+db_dir = os.path.dirname(DB_PATH)
+if db_dir and not os.path.exists(db_dir):
+    os.makedirs(db_dir, exist_ok=True)
 
 if not TELEGRAM_TOKEN:
     raise SystemExit("Нужно выставить переменную TELEGRAM_TOKEN")
