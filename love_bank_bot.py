@@ -224,7 +224,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def balance_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bal = get_balance(update.effective_user.id)
-    await update.message.reply_text(f"Твой баланс: {bal}€\nИ помни, ты всегда прав, потому что ты лев :)\n/love_menu для обмена на радости.")
+    await update.message.reply_text(f"Твой баланс: {bal}€\nИ помни, ты всегда прав, потому что ты лев :)\n\n/love_menu для обмена на радости.")
 
 async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bal = get_balance(update.effective_user.id)
