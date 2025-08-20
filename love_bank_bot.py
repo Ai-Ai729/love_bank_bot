@@ -461,7 +461,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         token = data[1]
         pending_del(token)
-        await q.edit_message_text("Обмен отменён. Выбери другой приз из меню ❤️")
+        await q.edit_message_text("Обмен отменён. Выбери другой приз из меню ❤️ /love_menu")
         return
 
 # -------- Main --------
