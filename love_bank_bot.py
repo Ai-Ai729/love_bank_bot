@@ -245,6 +245,9 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await photo.get_file()
     b = await file.download_as_bytearray()
 
+    processing_msg = await update.message.reply_text("🧠 Обрабатываю фото… подожди по-братски пару секунд")
+
+
     # 1) считаем купюры
     try:
         count = count_banknotes_with_openai(b)
@@ -301,6 +304,8 @@ async def album_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         async def finalize_after_delay():
             # ждём, пока Telegram догрузит остальные фото альбома
+            processing_msg = await update.message.reply_text("🧠 Обрабатываю фото… подожди по-братски пару секунд")
+
             await asyncio.sleep(1.2)
             images = album_buffers.pop(gid, [])
             album_tasks.pop(gid, None)  # снять «замок» задачи
