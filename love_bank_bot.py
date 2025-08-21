@@ -101,10 +101,11 @@ def init_db():
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
-        user_id INTEGER PRIMARY KEY,
-        first_name TEXT,
-        username TEXT,
-        balance INTEGER DEFAULT 0
+    user_id INTEGER PRIMARY KEY,
+    first_name TEXT,
+    username TEXT,
+    balance INTEGER DEFAULT 0,
+    cashout_count INTEGER DEFAULT 0 
     )""")
     # NEW: таблица учтённых изображений (анти-дубликаты)
     cur.execute("""CREATE TABLE IF NOT EXISTS images(
@@ -123,6 +124,21 @@ def init_db():
     )""")
     con.commit(); con.close()
 
+# -------- Migration (SQLite) --------
+def migrate_db():
+    con = sqlite3.connect(DB_PATH)
+    cur = con.cursor()
+    try:
+        # добавляем колонку, если её ещё нет
+        cur.execute("ALTER TABLE users ADD COLUMN cashout_count INTEGER DEFAULT 0;")
+        con.commit()
+    except sqlite3.OperationalError:
+        # колонка уже существует — игнорируем
+        pass
+    finally:
+        con.close()
+# --------  --------
+        
 def with_db(fn):
     def wrapper(*args, **kwargs):
         con = sqlite3.connect(DB_PATH)
@@ -161,6 +177,19 @@ def add_balance(con, user_id: int, delta: int) -> int:
         raise ValueError("Недостаточно средств")
     cur.execute("UPDATE users SET balance=? WHERE user_id=?", (new_bal, user_id))
     return new_bal
+
+@with_db
+def get_cashout_count(con, user_id: int) -> int:
+    cur = con.cursor()
+    cur.execute("SELECT cashout_count FROM users WHERE user_id=?", (user_id,))
+    row = cur.fetchone()
+    return row[0] if row else 0
+
+@with_db
+def inc_cashout_count(con, user_id: int):
+    cur = con.cursor()
+    cur.execute("UPDATE users SET cashout_count = cashout_count + 1 WHERE user_id=?", (user_id,))
+
 
 # --- Анти-дубли изображений ---
 def sha256_hex(b: bytes) -> str:
@@ -433,10 +462,20 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pending_del(token)
             await q.edit_message_text("Недостаточно средств. Копи еще 😉")
             return
+        if p_code == "cashout100":
+            count = get_cashout_count(user.id)
+            if count >= 2:
+                pending_del(token)
+                await q.edit_message_text(
+                    "❌ Лимит: перевод 100€ можно сделать максимум 2 раза. Сходи к жене, чтобы пополнить баланс 😉"
+                )
+                return
 
         new_bal = add_balance(user.id, -p_cost)
+        if p_code == "cashout100":
+            inc_cashout_count(user.id)
         pending_del(token)
-
+        
         extra = ""
         if p_code == "cashout100":
             extra = "\n🧾 Жди подтверждения."
@@ -467,6 +506,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # -------- Main --------
 def main():
     init_db()
+    migrate_db()
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
